@@ -82,6 +82,15 @@
          <version>1.9.0</version>
          <scope>test</scope>
       </dependency>
+
+      <!-- Application -->
+      <dependency>
+         <groupId>de.doubleslash</groupId>
+         <artifactId>todo-list-app</artifactId>
+         <version>1.0-SNAPSHOT</version>
+         <scope>test</scope>
+      </dependency>
+
    </dependencies>
 
    <build>

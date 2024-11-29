@@ -2,6 +2,8 @@ package de.doubleslash.todolist.controller;
 
 import de.doubleslash.todolist.model.Task;
 import de.doubleslash.todolist.service.TaskService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +13,8 @@ import java.util.List;
 @RequestMapping("/tasks")
 public class TaskController {
 
+    private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
+
     private final TaskService taskService;
 
     public TaskController(TaskService taskService) {
@@ -18,12 +22,14 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<Task> getAllTasks() {
-        return taskService.getAllTasks();
+    public ResponseEntity<List<Task>> getAllTasks() {
+        logger.info("GET request received to retrieve all tasks");
+        return ResponseEntity.ok(taskService.getAllTasks());
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody Task task) {
+    public ResponseEntity<Task> createTask(@RequestBody final Task task) {
+        logger.info("POST request received to create a new task: {}", task.getTitle());
         if (task.getTitle() == null || task.getTitle().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -32,6 +38,7 @@ public class TaskController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Task> markTaskAsCompleted(@PathVariable Long id) {
+        logger.info("PATCH request received to mark task with ID {} as completed", id);
         return taskService.markTaskAsCompleted(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
