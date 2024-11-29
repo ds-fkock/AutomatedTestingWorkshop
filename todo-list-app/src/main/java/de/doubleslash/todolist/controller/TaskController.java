@@ -31,6 +31,7 @@ public class TaskController {
     public ResponseEntity<Task> createTask(@RequestBody final Task task) {
         logger.info("POST request received to create a new task: {}", task.getTitle());
         if (task.getTitle() == null || task.getTitle().isEmpty()) {
+            logger.warn("Bad request received - task title null or empty: {}", task);
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(taskService.createTask(task.getTitle(), task.getStatus() == null? "open" : task.getStatus()  ));

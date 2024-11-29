@@ -1,5 +1,5 @@
-Feature: API Endpoints Testen
+Feature: Test Endpoints
   Scenario: Get request for retrieving all todos
-    Given 2 tasks are open
-    When all tasks are requested and 2 are open
-    Then the server should respond with 200
+    Given 2 open tasks are added
+    When all tasks are requested
+    Then there are at least 2 open tasks
