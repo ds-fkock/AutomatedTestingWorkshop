@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/AutomatedTestingWorkshop.iml" filepath="$PROJECT_DIR$/.idea/AutomatedTestingWorkshop.iml" />
-      <module fileurl="file://$PROJECT_DIR$/todo-list-api-test/todo-list-api-test.iml" filepath="$PROJECT_DIR$/todo-list-api-test/todo-list-api-test.iml" />
     </modules>
   </component>
 </project>
