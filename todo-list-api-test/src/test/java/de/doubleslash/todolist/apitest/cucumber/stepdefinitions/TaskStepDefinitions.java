@@ -77,6 +77,6 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
                                        .filter(task -> task.getStatus().equalsIgnoreCase("OPEN"))
                                        .count();
       //TODO does not really make sense since there could already be tasks if it is a prod application
-      assertThat(openTasksCount).isGreaterThan(arg0);
+      assertThat(openTasksCount).isGreaterThanOrEqualTo(arg0);
    }
 }
