@@ -33,7 +33,7 @@ public class TaskController {
         if (task.getTitle() == null || task.getTitle().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(taskService.createTask(task.getTitle()));
+        return ResponseEntity.ok(taskService.createTask(task.getTitle(), task.getStatus() == null? "open" : task.getStatus()  ));
     }
 
     @PatchMapping("/{id}")

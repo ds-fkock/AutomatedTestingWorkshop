@@ -17,8 +17,8 @@ public class TaskService {
         return tasks;
     }
 
-    public Task createTask(final String title) {
-        final Task task = new Task(idCounter++, title, "open");
+    public Task createTask(final String title, final String status) {
+        final Task task = new Task(idCounter++, title, status);
         tasks.add(task);
         return task;
     }
