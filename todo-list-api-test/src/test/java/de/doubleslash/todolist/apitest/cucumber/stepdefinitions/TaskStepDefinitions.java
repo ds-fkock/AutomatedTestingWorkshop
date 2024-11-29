@@ -28,14 +28,14 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
          task.setId(i + 1L);
          task.setTitle("Task " + (i + 1));
          task.setStatus("OPEN");
-         testRestTemplate.postForEntity("/tasks", task, Task.class);
+         testRestTemplate.postForEntity("http://localhost:8080/tasks", task, Task.class);
       }
    }
 
    @When("all tasks are requested and {int} are open")
    public void allTasksAreRequestedAndAreOpen(final int arg0) {
       response = testRestTemplate.exchange(
-            "/tasks",
+            "http://localhost:8080/tasks",
             HttpMethod.GET,
             null,
             new ParameterizedTypeReference<List<Task>>() {}
