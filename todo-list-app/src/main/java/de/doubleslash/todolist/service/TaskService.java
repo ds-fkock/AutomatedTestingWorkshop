@@ -24,10 +24,14 @@ public class TaskService {
         return task;
     }
 
-    public Optional<Task> markTaskAsCompleted(Long id) {
+    public Optional<Task> markTaskAsCompleted(final Long id) {
         return tasks.stream()
                 .filter(task -> task.getId().equals(id))
                 .peek(task -> task.setStatus(TaskStatus.DONE))
                 .findFirst();
+    }
+
+    public void markTasksAsCompleted() {
+        tasks.forEach(task -> task.setStatus(TaskStatus.DONE));
     }
 }

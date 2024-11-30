@@ -46,4 +46,11 @@ public class TaskController {
                         .map(ResponseEntity::ok)
                         .orElse(ResponseEntity.notFound().build());
    }
+
+   @PatchMapping
+   public ResponseEntity<Void> markAllTasksAsCompleted() {
+      logger.info("PATCH request received to mark all tasks as completed");
+      taskService.markTasksAsCompleted();
+      return ResponseEntity.ok().build();
+   }
 }

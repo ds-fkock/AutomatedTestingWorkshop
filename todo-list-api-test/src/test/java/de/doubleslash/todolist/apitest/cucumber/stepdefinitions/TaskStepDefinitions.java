@@ -3,6 +3,7 @@ package de.doubleslash.todolist.apitest.cucumber.stepdefinitions;
 import de.doubleslash.todolist.apitest.cucumber.CucumberSpringConfiguration;
 import de.doubleslash.todolist.model.Task;
 import de.doubleslash.todolist.model.TaskStatus;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,16 +24,20 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    private ResponseEntity<List<Task>> getResponse;
    private ResponseEntity<Task> postResponse;
+   private ResponseEntity<Task> patchResponse;
    private List<Task> tasks;
+   private List<Long> createdTaskIds;
 
    @Given("{int} open tasks are present")
    public void tasksAreOpen(final int arg0) {
+      createdTaskIds = new ArrayList<>();
       Task task;
       for (int i = 0; i < arg0; i++) {
          task = new Task();
          task.setTitle("Task " + (i + 1));
          task.setStatus(TaskStatus.OPEN);
          postResponse = testRestTemplate.postForEntity("http://localhost:8080/tasks", task, Task.class);
+         createdTaskIds.add(postResponse.getBody().getId());
       }
    }
 
@@ -75,12 +81,46 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    }
 
    @Then("the server should respond with {int} on POST endpoint")
-   public void theServerShouldRespondWithOnPostEndpoint(int arg0) {
+   public void theServerShouldRespondWithOnPostEndpoint(final int arg0) {
       assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
    }
 
    @Then("the server should respond with {int} on GET endpoint")
    public void theServerShouldRespondWith(final int arg0) {
       assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+   }
+
+   @When("task should be marked complete")
+   public void taskShouldBeMarkedComplete() {
+      for (final Long taskId : createdTaskIds) {
+         //TODO how to do this correctly
+         patchResponse = testRestTemplate.exchange(
+             "http://localhost:8080/tasks/" + taskId,
+             HttpMethod.PATCH,
+             null,
+             new ParameterizedTypeReference<Task>() {
+             }
+         );
+         assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+      }
+   }
+
+   @Then("the server should respond with {int} on PATCH endpoint")
+   public void theServerShouldRespondWithOnPATCHEndpoint(final int arg0) {
+      assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+   }
+
+   @And("there are no open tasks")
+   public void thereAreNoOpenTasks() {
+      getResponse = testRestTemplate.exchange(
+            "http://localhost:8080/tasks",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<Task>>() {
+            }
+      );
+      tasks = getResponse.getBody();
+      assertThat(tasks).isNotNull();
+      assertThat(tasks).isEmpty();
    }
 }
