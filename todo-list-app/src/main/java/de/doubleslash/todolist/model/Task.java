@@ -3,11 +3,11 @@ package de.doubleslash.todolist.model;
 public class Task {
     private Long id;
     private String title;
-    private String status;
+    private TaskStatus status;
 
     public Task() {}
 
-    public Task(Long id, String title, String status) {
+    public Task(final Long id, final String title, final TaskStatus status) {
         this.id = id;
         this.title = title;
         this.status = status;
