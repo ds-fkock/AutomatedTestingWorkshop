@@ -1,5 +1,5 @@
 Feature: Test Endpoints
   Scenario: Test Bad Request when adding task without title
-    Given nothing
+    Given api endpoint for adding users is present
     When a task with no title is added
-    Then the server should respond with 400
+    Then the server should respond with 400 on POST endpoint

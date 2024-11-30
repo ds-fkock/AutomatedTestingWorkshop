@@ -9,6 +9,7 @@ import io.cucumber.java.en.When;
 import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
@@ -19,11 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CucumberContextConfiguration
 public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
-   private ResponseEntity<List<Task>> response;
+   private ResponseEntity<List<Task>> getResponse;
    private ResponseEntity<Task> postResponse;
    private List<Task> tasks;
 
-   @Given("{int} open tasks are added")
+   @Given("{int} open tasks are present")
    public void tasksAreOpen(final int arg0) {
       Task task;
       for (int i = 0; i < arg0; i++) {
@@ -34,8 +35,13 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       }
    }
 
-   @Given("nothing")
-   public void nothing() {
+   @Given("api endpoint for adding users is present")
+   public void apiEndpointForAddingUsers() {
+      final Task task = new Task();
+      task.setTitle("Validation Task");
+      task.setStatus(TaskStatus.OPEN);
+      postResponse = testRestTemplate.postForEntity("http://localhost:8080/tasks", task, Task.class);
+      assertThat(postResponse.getStatusCode()).isNotEqualTo(HttpStatus.NOT_FOUND);
    }
 
    @When("a task with no title is added")
@@ -48,25 +54,15 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    @When("all tasks are requested")
    public void allTasksAreRequestedAndAreOpen() {
-      response = testRestTemplate.exchange(
+      getResponse = testRestTemplate.exchange(
             "http://localhost:8080/tasks",
             HttpMethod.GET,
             null,
-            new ParameterizedTypeReference<List<Task>>() {}
+            new ParameterizedTypeReference<List<Task>>() {
+            }
       );
-      tasks = response.getBody();
+      tasks = getResponse.getBody();
       assertThat(tasks).isNotNull();
-   }
-
-   @Then("the server should respond with {int}")
-   public void theServerShouldRespondWith(final int arg0) {
-      //TODO refactor this - maybe rather integrate response code assertions in steps
-      if (response != null) {
-         assertThat(response.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
-      }
-      else {
-         assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
-      }
    }
 
    @Then("there are at least {int} open tasks")
@@ -76,5 +72,15 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
                                        .count();
       //TODO does not really make sense since there could already be tasks if it is a prod application
       assertThat(openTasksCount).isGreaterThanOrEqualTo(arg0);
+   }
+
+   @Then("the server should respond with {int} on POST endpoint")
+   public void theServerShouldRespondWithOnPostEndpoint(int arg0) {
+      assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+   }
+
+   @Then("the server should respond with {int} on GET endpoint")
+   public void theServerShouldRespondWith(final int arg0) {
+      assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
    }
 }
