@@ -2,6 +2,7 @@ package de.doubleslash.todolist.apitest.cucumber.stepdefinitions;
 
 import de.doubleslash.todolist.apitest.cucumber.CucumberSpringConfiguration;
 import de.doubleslash.todolist.model.Task;
+import de.doubleslash.todolist.model.TaskStatus;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -27,9 +28,8 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       Task task;
       for (int i = 0; i < arg0; i++) {
          task = new Task();
-         task.setId(i + 1L);
          task.setTitle("Task " + (i + 1));
-         task.setStatus("OPEN");
+         task.setStatus(TaskStatus.OPEN);
          postResponse = testRestTemplate.postForEntity("http://localhost:8080/tasks", task, Task.class);
       }
    }
@@ -42,7 +42,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    public void aTaskWithNoTitleIsAdded() {
       final Task task = new Task();
       task.setTitle(null);
-      task.setStatus("OPEN");
+      task.setStatus(TaskStatus.OPEN);
       postResponse = testRestTemplate.postForEntity("http://localhost:8080/tasks", task, Task.class);
    }
 
@@ -72,7 +72,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    @Then("there are at least {int} open tasks")
    public void thereAreAtLeastOpenTasks(final int arg0) {
       final long openTasksCount = tasks.stream()
-                                       .filter(task -> task.getStatus().equalsIgnoreCase("OPEN"))
+                                       .filter(task -> task.getStatus().equals(TaskStatus.OPEN))
                                        .count();
       //TODO does not really make sense since there could already be tasks if it is a prod application
       assertThat(openTasksCount).isGreaterThanOrEqualTo(arg0);

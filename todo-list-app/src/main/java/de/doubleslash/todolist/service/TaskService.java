@@ -1,6 +1,7 @@
 package de.doubleslash.todolist.service;
 
 import de.doubleslash.todolist.model.Task;
+import de.doubleslash.todolist.model.TaskStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class TaskService {
     public Optional<Task> markTaskAsCompleted(Long id) {
         return tasks.stream()
                 .filter(task -> task.getId().equals(id))
-                .peek(task -> task.setStatus("done"))
+                .peek(task -> task.setStatus(TaskStatus.DONE))
                 .findFirst();
     }
 }
