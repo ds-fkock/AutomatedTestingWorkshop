@@ -8,6 +8,8 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.cucumber.spring.CucumberContextConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
@@ -20,65 +22,46 @@ import static org.assertj.core.api.Assertions.fail;
 @CucumberContextConfiguration
 public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
+   private static final Logger logger = LoggerFactory.getLogger(TaskStepDefinitions.class);
+
    private ResponseEntity<List<Task>> getResponse;
    private ResponseEntity<Task> postResponse;
    private ResponseEntity<Void> patchResponse;
    private List<Task> tasks;
    private List<Long> createdTaskIds;
 
+   private static final String TASKS_API = "/tasks";
+
    @Given("{int} open tasks are present")
    public void tasksAreOpen(final int arg0) {
       createdTaskIds = new ArrayList<>();
       for (int i = 0; i < arg0; i++) {
          final String title = "Task " + i;
-         createTaskWithTitle(title);
+         postResponse = createTask(title, TaskStatus.OPEN);
+         addCreatedTaskToTaskList();
       }
    }
 
-   private void createTaskWithTitle(final String title) {
-      final Task task = new Task();
-      task.setTitle(title);
-      task.setStatus(TaskStatus.OPEN);
-      postResponse = testRestTemplate.postForEntity(testTarget + "/tasks", task, Task.class);
-      if (postResponse.getStatusCode() == HttpStatus.OK && postResponse.getBody() != null) {
-         createdTaskIds.add(postResponse.getBody().getId());
-      } else {
-         fail("Unexpected status code: " + postResponse.getStatusCode());
-      }
-   }
-
-   @Given("api endpoint for adding users is present")
-   public void apiEndpointForAddingUsers() {
-      final Task task = new Task();
-      task.setTitle("Validation Task");
-      task.setStatus(TaskStatus.OPEN);
-      postResponse = testRestTemplate.postForEntity(testTarget + "/tasks", task, Task.class);
-      assertThat(postResponse.getStatusCode()).isNotEqualTo(HttpStatus.NOT_FOUND);
+   @Given("api endpoint for adding todos is present")
+   public void apiEndpointForAddingTodos() {
+      postResponse = createTask("apiEndpointForAddingTodos", TaskStatus.OPEN);
+      addCreatedTaskToTaskList();
    }
 
    @When("a task with no title is added")
    public void aTaskWithNoTitleIsAdded() {
-      final Task task = new Task();
-      task.setTitle(null);
-      task.setStatus(TaskStatus.OPEN);
-      postResponse = testRestTemplate.postForEntity(testTarget + "/tasks", task, Task.class);
+      postResponse = createTask(null, TaskStatus.OPEN);
    }
 
    @When("all tasks are requested")
    public void allTasksAreRequestedAndAreOpen() {
-      getResponse = testRestTemplate.exchange(testTarget + "/tasks", HttpMethod.GET, null,
-            new ParameterizedTypeReference<List<Task>>() {
-            });
-      tasks = getResponse.getBody();
+      getAllTasks();
       assertThat(tasks).isNotNull();
    }
 
    @Then("there are {int} open tasks")
    public void thereAreAtLeastOpenTasks(final int arg0) {
-      final long openTasksCount = tasks.stream()
-                                       .filter(task -> task.getStatus().equals(TaskStatus.OPEN)
-                                             && createdTaskIds.contains(task.getId()))
-                                       .count();
+      final long openTasksCount = getCountByTaskStatus(TaskStatus.OPEN);
       assertThat(openTasksCount).isEqualTo(arg0);
    }
 
@@ -96,7 +79,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    public void taskShouldBeMarkedComplete() {
       for (final Long taskId : createdTaskIds) {
          final HttpEntity<Void> entity = new HttpEntity<>(null, new HttpHeaders());
-         patchResponse = testRestTemplate.exchange(testTarget + "/tasks/" + taskId.toString(), HttpMethod.PATCH,
+         patchResponse = testRestTemplate.exchange(testTarget + TASKS_API + taskId.toString(), HttpMethod.PATCH,
                entity, Void.class);
          assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
       }
@@ -109,36 +92,54 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    @Then("there are no open tasks")
    public void thereAreNoOpenTasks() {
-      getResponse = testRestTemplate.exchange(testTarget + "/tasks", HttpMethod.GET, null,
-            new ParameterizedTypeReference<List<Task>>() {
-            });
-      tasks = getResponse.getBody();
+      getAllTasks();
       assertThat(tasks).isNotNull();
-      final long countOpenTasks = tasks.stream()
-                                       .filter(task -> task.getStatus() == TaskStatus.OPEN && createdTaskIds.contains(
-                                             task.getId()))
-                                       .count();
+      final long countOpenTasks = getCountByTaskStatus(TaskStatus.OPEN);
       assertThat(countOpenTasks).isZero();
    }
 
    @Then("there are {int} completed tasks")
    public void thereAreCompletedTasks(final int arg0) {
-      getResponse = testRestTemplate.exchange(testTarget + "/tasks", HttpMethod.GET, null,
-            new ParameterizedTypeReference<List<Task>>() {
-            });
-      tasks = getResponse.getBody();
+      getAllTasks();
       assertThat(tasks).isNotNull();
-      final long countDoneTasks = tasks.stream()
-                                       .filter(task -> task.getStatus() == TaskStatus.DONE && createdTaskIds.contains(
-                                             task.getId()))
-                                       .count();
+      final long countDoneTasks = getCountByTaskStatus(TaskStatus.DONE);
       assertThat(countDoneTasks).isEqualTo(arg0);
    }
 
    @After
    private void cleanup() {
-      patchResponse = testRestTemplate.exchange(testTarget + "/tasks/", HttpMethod.PATCH, null, Void.class);
+      patchResponse = testRestTemplate.exchange(testTarget + TASKS_API, HttpMethod.PATCH, null, Void.class);
       createdTaskIds.clear();
       tasks.clear();
+   }
+
+   private ResponseEntity<Task> createTask(final String title, final TaskStatus status) {
+      final Task task = new Task();
+      task.setTitle(title);
+      task.setStatus(status);
+      return testRestTemplate.postForEntity(testTarget + TASKS_API, task, Task.class);
+   }
+
+   private void addCreatedTaskToTaskList() {
+      if (postResponse.getStatusCode() == HttpStatus.OK && postResponse.getBody() != null) {
+         createdTaskIds.add(postResponse.getBody().getId());
+      } else {
+         logger.error("Unexpected status code: {}", postResponse.getStatusCode());
+         fail("Unexpected status code: " + postResponse.getStatusCode());
+      }
+   }
+
+   private void getAllTasks() {
+      getResponse = testRestTemplate.exchange(testTarget + TASKS_API, HttpMethod.GET, null,
+            new ParameterizedTypeReference<List<Task>>() {
+            });
+      tasks = getResponse.getBody();
+   }
+
+   private long getCountByTaskStatus(final TaskStatus taskStatus) {
+      return tasks.stream()
+                  .filter(task -> task.getStatus() == taskStatus && createdTaskIds.contains(
+                        task.getId()))
+                  .count();
    }
 }
