@@ -78,9 +78,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    @When("task should be marked complete")
    public void taskShouldBeMarkedComplete() {
       for (final Long taskId : createdTaskIds) {
-         final HttpEntity<Void> entity = new HttpEntity<>(null, new HttpHeaders());
-         patchResponse = testRestTemplate.exchange(testTarget + TASKS_API + taskId.toString(), HttpMethod.PATCH,
-               entity, Void.class);
+         markTaskAsDone(taskId);
          assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
       }
    }
@@ -141,5 +139,11 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
                   .filter(task -> task.getStatus() == taskStatus && createdTaskIds.contains(
                         task.getId()))
                   .count();
+   }
+
+   private void markTaskAsDone(final Long taskId) {
+      final HttpEntity<Void> entity = new HttpEntity<>(null, new HttpHeaders());
+      patchResponse = testRestTemplate.exchange(testTarget + TASKS_API + "/" + taskId.toString(), HttpMethod.PATCH,
+            entity, Void.class);
    }
 }

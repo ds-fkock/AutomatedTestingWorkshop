@@ -53,9 +53,11 @@ public class TaskController {
       final Optional<Task> completedTask = taskService.markTaskAsCompleted(id);
 
       if (completedTask.isPresent()) {
+         logger.info("Task with ID {} marked as completed", id);
          return ResponseEntity.ok().build();
       }
       else {
+         logger.warn("Task with ID {} not found", id);
          return ResponseEntity.notFound().build();
       }
    }
