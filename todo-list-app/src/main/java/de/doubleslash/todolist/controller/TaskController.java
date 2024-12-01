@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/tasks")
@@ -39,18 +40,23 @@ public class TaskController {
             taskService.createTask(task.getTitle(), task.getStatus() == null ? TaskStatus.OPEN : task.getStatus()));
    }
 
-   @PatchMapping("/{id}")
-   public ResponseEntity<Task> markTaskAsCompleted(@PathVariable final Long id) {
-      logger.info("PATCH request received to mark task with ID {} as completed", id);
-      return taskService.markTaskAsCompleted(id)
-                        .map(ResponseEntity::ok)
-                        .orElse(ResponseEntity.notFound().build());
-   }
-
    @PatchMapping
    public ResponseEntity<Void> markAllTasksAsCompleted() {
       logger.info("PATCH request received to mark all tasks as completed");
       taskService.markTasksAsCompleted();
       return ResponseEntity.ok().build();
+   }
+
+   @PatchMapping("/{id}")
+   public ResponseEntity<Task> markTaskAsCompleted(@PathVariable final Long id) {
+      logger.info("PATCH request received to mark task with ID {} as completed", id);
+      final Optional<Task> completedTask = taskService.markTaskAsCompleted(id);
+
+      if (completedTask.isPresent()) {
+         return ResponseEntity.ok().build();
+      }
+      else {
+         return ResponseEntity.notFound().build();
+      }
    }
 }
