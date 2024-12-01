@@ -3,7 +3,7 @@ package de.doubleslash.todolist.apitest.cucumber.stepdefinitions;
 import de.doubleslash.todolist.apitest.cucumber.CucumberSpringConfiguration;
 import de.doubleslash.todolist.model.Task;
 import de.doubleslash.todolist.model.TaskStatus;
-import io.cucumber.java.en.And;
+import io.cucumber.java.After;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -66,24 +66,20 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    @When("all tasks are requested")
    public void allTasksAreRequestedAndAreOpen() {
-      getResponse = testRestTemplate.exchange(
-            "http://localhost:8080/tasks",
-            HttpMethod.GET,
-            null,
+      getResponse = testRestTemplate.exchange("http://localhost:8080/tasks", HttpMethod.GET, null,
             new ParameterizedTypeReference<List<Task>>() {
-            }
-      );
+            });
       tasks = getResponse.getBody();
       assertThat(tasks).isNotNull();
    }
 
-   @Then("there are at least {int} open tasks")
+   @Then("there are {int} open tasks")
    public void thereAreAtLeastOpenTasks(final int arg0) {
       final long openTasksCount = tasks.stream()
-                                       .filter(task -> task.getStatus().equals(TaskStatus.OPEN))
+                                       .filter(task -> task.getStatus().equals(TaskStatus.OPEN)
+                                             && createdTaskIds.contains(task.getId()))
                                        .count();
-      //TODO does not really make sense since there could already be tasks if it is a prod application
-      assertThat(openTasksCount).isGreaterThanOrEqualTo(arg0);
+      assertThat(openTasksCount).isEqualTo(arg0);
    }
 
    @Then("the server should respond with {int} on POST endpoint")
@@ -100,12 +96,8 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    public void taskShouldBeMarkedComplete() {
       for (final Long taskId : createdTaskIds) {
          final HttpEntity<Void> entity = new HttpEntity<>(null, new HttpHeaders());
-         patchResponse = testRestTemplate.exchange(
-               "http://localhost:8080/tasks/" + taskId.toString(),
-               HttpMethod.PATCH,
-               entity,
-               Void.class
-         );
+         patchResponse = testRestTemplate.exchange("http://localhost:8080/tasks/" + taskId.toString(), HttpMethod.PATCH,
+               entity, Void.class);
          assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
       }
    }
@@ -115,33 +107,38 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
    }
 
-   @And("there are no open tasks")
+   @Then("there are no open tasks")
    public void thereAreNoOpenTasks() {
-      getResponse = testRestTemplate.exchange(
-            "http://localhost:8080/tasks",
-            HttpMethod.GET,
-            null,
+      getResponse = testRestTemplate.exchange("http://localhost:8080/tasks", HttpMethod.GET, null,
             new ParameterizedTypeReference<List<Task>>() {
-            }
-      );
+            });
       tasks = getResponse.getBody();
       assertThat(tasks).isNotNull();
-      final long countOpenTasks = tasks.stream().filter(task -> task.getStatus() == TaskStatus.OPEN).count();
+      final long countOpenTasks = tasks.stream()
+                                       .filter(task -> task.getStatus() == TaskStatus.OPEN && createdTaskIds.contains(
+                                             task.getId()))
+                                       .count();
       assertThat(countOpenTasks).isZero();
    }
 
-   @And("there are completed tasks")
-   public void thereAreCompletedTasks() {
-      getResponse = testRestTemplate.exchange(
-            "http://localhost:8080/tasks",
-            HttpMethod.GET,
-            null,
+   @Then("there are {int} completed tasks")
+   public void thereAreCompletedTasks(final int arg0) {
+      getResponse = testRestTemplate.exchange("http://localhost:8080/tasks", HttpMethod.GET, null,
             new ParameterizedTypeReference<List<Task>>() {
-            }
-      );
+            });
       tasks = getResponse.getBody();
       assertThat(tasks).isNotNull();
-      final long countDoneTasks = tasks.stream().filter(task -> task.getStatus() == TaskStatus.DONE).count();
-      assertThat(countDoneTasks).isZero();
+      final long countDoneTasks = tasks.stream()
+                                       .filter(task -> task.getStatus() == TaskStatus.DONE && createdTaskIds.contains(
+                                             task.getId()))
+                                       .count();
+      assertThat(countDoneTasks).isEqualTo(arg0);
+   }
+
+   @After
+   private void cleanup() {
+      patchResponse = testRestTemplate.exchange("http://localhost:8080/tasks/", HttpMethod.PATCH, null, Void.class);
+      createdTaskIds.clear();
+      tasks.clear();
    }
 }
