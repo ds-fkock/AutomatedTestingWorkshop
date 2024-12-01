@@ -13,6 +13,11 @@ public class Task {
         this.status = status;
     }
 
+    public Task(String title, TaskStatus status) {
+        this.title = title;
+        this.status = status;
+    }
+
     public Long getId() {
         return id;
     }
