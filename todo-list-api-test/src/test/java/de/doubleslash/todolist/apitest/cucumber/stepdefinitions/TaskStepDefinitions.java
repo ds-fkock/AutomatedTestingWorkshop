@@ -39,7 +39,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       final Task task = new Task();
       task.setTitle(title);
       task.setStatus(TaskStatus.OPEN);
-      postResponse = testRestTemplate.postForEntity("http://localhost:8080/tasks", task, Task.class);
+      postResponse = testRestTemplate.postForEntity(testTarget + "/tasks", task, Task.class);
       if (postResponse.getStatusCode() == HttpStatus.OK && postResponse.getBody() != null) {
          createdTaskIds.add(postResponse.getBody().getId());
       } else {
@@ -52,7 +52,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       final Task task = new Task();
       task.setTitle("Validation Task");
       task.setStatus(TaskStatus.OPEN);
-      postResponse = testRestTemplate.postForEntity("http://localhost:8080/tasks", task, Task.class);
+      postResponse = testRestTemplate.postForEntity(testTarget + "/tasks", task, Task.class);
       assertThat(postResponse.getStatusCode()).isNotEqualTo(HttpStatus.NOT_FOUND);
    }
 
@@ -61,12 +61,12 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       final Task task = new Task();
       task.setTitle(null);
       task.setStatus(TaskStatus.OPEN);
-      postResponse = testRestTemplate.postForEntity("http://localhost:8080/tasks", task, Task.class);
+      postResponse = testRestTemplate.postForEntity(testTarget + "/tasks", task, Task.class);
    }
 
    @When("all tasks are requested")
    public void allTasksAreRequestedAndAreOpen() {
-      getResponse = testRestTemplate.exchange("http://localhost:8080/tasks", HttpMethod.GET, null,
+      getResponse = testRestTemplate.exchange(testTarget + "/tasks", HttpMethod.GET, null,
             new ParameterizedTypeReference<List<Task>>() {
             });
       tasks = getResponse.getBody();
@@ -96,7 +96,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    public void taskShouldBeMarkedComplete() {
       for (final Long taskId : createdTaskIds) {
          final HttpEntity<Void> entity = new HttpEntity<>(null, new HttpHeaders());
-         patchResponse = testRestTemplate.exchange("http://localhost:8080/tasks/" + taskId.toString(), HttpMethod.PATCH,
+         patchResponse = testRestTemplate.exchange(testTarget + "/tasks/" + taskId.toString(), HttpMethod.PATCH,
                entity, Void.class);
          assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
       }
@@ -109,7 +109,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    @Then("there are no open tasks")
    public void thereAreNoOpenTasks() {
-      getResponse = testRestTemplate.exchange("http://localhost:8080/tasks", HttpMethod.GET, null,
+      getResponse = testRestTemplate.exchange(testTarget + "/tasks", HttpMethod.GET, null,
             new ParameterizedTypeReference<List<Task>>() {
             });
       tasks = getResponse.getBody();
@@ -123,7 +123,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    @Then("there are {int} completed tasks")
    public void thereAreCompletedTasks(final int arg0) {
-      getResponse = testRestTemplate.exchange("http://localhost:8080/tasks", HttpMethod.GET, null,
+      getResponse = testRestTemplate.exchange(testTarget + "/tasks", HttpMethod.GET, null,
             new ParameterizedTypeReference<List<Task>>() {
             });
       tasks = getResponse.getBody();
@@ -137,7 +137,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    @After
    private void cleanup() {
-      patchResponse = testRestTemplate.exchange("http://localhost:8080/tasks/", HttpMethod.PATCH, null, Void.class);
+      patchResponse = testRestTemplate.exchange(testTarget + "/tasks/", HttpMethod.PATCH, null, Void.class);
       createdTaskIds.clear();
       tasks.clear();
    }
