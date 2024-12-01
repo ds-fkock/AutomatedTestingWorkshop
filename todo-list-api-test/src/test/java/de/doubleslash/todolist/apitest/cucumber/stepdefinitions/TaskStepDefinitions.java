@@ -65,6 +65,14 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       assertThat(tasks).isNotNull();
    }
 
+   @When("task should be marked complete")
+   public void taskShouldBeMarkedComplete() {
+      for (final Long taskId : createdTaskIds) {
+         markTaskAsDone(taskId);
+         assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+      }
+   }
+
    @Then("there are {int} open tasks")
    public void thereAreAtLeastOpenTasks(final int arg0) {
       final long openTasksCount = getCountByTaskStatus(TaskStatus.OPEN);
@@ -92,14 +100,6 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    @Then("the server should respond with {int} on GET endpoint")
    public void theServerShouldRespondWith(final int arg0) {
       assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
-   }
-
-   @When("task should be marked complete")
-   public void taskShouldBeMarkedComplete() {
-      for (final Long taskId : createdTaskIds) {
-         markTaskAsDone(taskId);
-         assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-      }
    }
 
    @Then("the server should respond with {int} on PATCH endpoint")
