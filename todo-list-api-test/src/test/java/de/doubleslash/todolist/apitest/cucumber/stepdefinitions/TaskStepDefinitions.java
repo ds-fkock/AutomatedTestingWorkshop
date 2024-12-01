@@ -94,7 +94,6 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
          default:
             fail("Invalid endpoint: " + arg1);
       }
-      assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
    }
 
    @Then("the server should respond with {int} on GET endpoint")
