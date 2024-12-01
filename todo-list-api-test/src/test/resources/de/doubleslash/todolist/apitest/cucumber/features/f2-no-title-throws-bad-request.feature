@@ -1,4 +1,4 @@
-Feature: Test Endpoints
+Feature: Test Bad Request on creation
   Scenario: Test Bad Request when adding task without title
     Given api endpoint for adding users is present
     When a task with no title is added

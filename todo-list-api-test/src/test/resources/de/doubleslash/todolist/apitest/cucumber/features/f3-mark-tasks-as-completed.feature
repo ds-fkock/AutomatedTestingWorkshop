@@ -1,4 +1,4 @@
-Feature: Test Endpoints
+Feature: Test task completion
   Scenario: Mark created task as done
     Given 1 open tasks are present
     When task should be marked complete
