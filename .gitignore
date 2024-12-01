@@ -6,8 +6,6 @@ target/
 ### IntelliJ IDEA ###
 # Ignore the entire .idea folder
 .idea/
-# But do not ignore the runConfigurations folder
-!.idea/runConfigurations/
 
 ### Eclipse ###
 .apt_generated
