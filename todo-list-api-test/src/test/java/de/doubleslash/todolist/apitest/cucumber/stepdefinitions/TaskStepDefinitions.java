@@ -71,8 +71,21 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       assertThat(openTasksCount).isEqualTo(arg0);
    }
 
-   @Then("the server should respond with {int} on POST endpoint")
-   public void theServerShouldRespondWithOnPostEndpoint(final int arg0) {
+   @Then("the server should respond with {int} on {string} endpoint")
+   public void theServerShouldRespondWithOnPostEndpoint(final int arg0, final String arg1) {
+      switch (arg1) {
+         case "POST":
+            assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+            break;
+         case "GET":
+            assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+            break;
+         case "PATCH":
+            assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+            break;
+         default:
+            fail("Invalid endpoint: " + arg1);
+      }
       assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
    }
 
