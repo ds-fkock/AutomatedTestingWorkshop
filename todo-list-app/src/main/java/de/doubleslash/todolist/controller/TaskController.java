@@ -48,7 +48,7 @@ public class TaskController {
    }
 
    @PatchMapping("/{id}")
-   public ResponseEntity<Task> markTaskAsCompleted(@PathVariable final Long id) {
+   public ResponseEntity<Void> markTaskAsCompleted(@PathVariable final Long id) {
       logger.info("PATCH request received to mark task with ID {} as completed", id);
       final Optional<Task> completedTask = taskService.markTaskAsCompleted(id);
 
