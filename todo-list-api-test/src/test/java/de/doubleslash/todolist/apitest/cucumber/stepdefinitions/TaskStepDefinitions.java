@@ -4,6 +4,7 @@ import de.doubleslash.todolist.apitest.cucumber.CucumberSpringConfiguration;
 import de.doubleslash.todolist.model.Task;
 import de.doubleslash.todolist.model.TaskStatus;
 import io.cucumber.java.After;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -32,9 +33,14 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    private static final String TASKS_API = "/tasks";
 
+   @Before
+   public void setUp() {
+      tasks = new ArrayList<>();
+      createdTaskIds = new ArrayList<>();
+   }
+
    @Given("{int} open tasks are present")
    public void tasksAreOpen(final int arg0) {
-      createdTaskIds = new ArrayList<>();
       for (int i = 0; i < arg0; i++) {
          final String title = "Task " + i;
          postResponse = createTask(title, TaskStatus.OPEN);
