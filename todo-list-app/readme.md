@@ -15,8 +15,8 @@ This module contains the core functionality of your application.
    cd your-project
 3. Build project
    mvn clean install
-4. Run configs for intelliJ are in the project folder
-5. Otherwise Run the Spring Boot Application from CLI
+5. Run the spring boot application with
+   mvn spring-boot:run
 
 ## Technologies Used
 

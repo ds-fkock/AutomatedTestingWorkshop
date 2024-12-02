@@ -19,7 +19,9 @@ This project contains automated tests for the Todo List API using Cucumber and S
    mvn clean install
 4. Run the Tests
    mvn clean verify / mvn test
-
+5. If you want to test without a running application you can remove the value of test.target from
+   application-test.properties. Then the controller is loaded on demand by spring boot. Otherwise requests are sent to
+   the running application.
 
 ## Technologies Used
 
