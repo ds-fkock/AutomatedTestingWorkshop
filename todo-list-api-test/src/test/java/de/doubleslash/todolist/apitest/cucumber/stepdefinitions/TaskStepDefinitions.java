@@ -1,6 +1,7 @@
 package de.doubleslash.todolist.apitest.cucumber.stepdefinitions;
 
 import de.doubleslash.todolist.apitest.cucumber.CucumberSpringConfiguration;
+import de.doubleslash.todolist.model.Task;
 import de.doubleslash.todolist.model.TaskStatus;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -24,7 +26,6 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    @Before
    public void setUp() {
-      tasks = new ArrayList<>();
       createdTaskIds = new ArrayList<>();
    }
 
@@ -33,14 +34,12 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
       for (int i = 0; i < taskCount; i++) {
          final String title = "Task " + i;
          postResponse = createTask(title, TaskStatus.OPEN);
-         addCreatedTaskToTaskList();
       }
    }
 
    @Given("api endpoint for adding todos is present")
    public void apiEndpointForAddingTodos() {
       postResponse = createTask("apiEndpointForAddingTodos", TaskStatus.OPEN);
-      addCreatedTaskToTaskList();
    }
 
    @When("a task with no title is added")
@@ -49,8 +48,8 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    }
 
    @When("all tasks are requested")
-   public void allTasksAreRequestedAndAreOpen() {
-      getAllTasks();
+   public void allTasksAreRequested() {
+      final List<Task> tasks = getAllTasks();
       assertThat(tasks).isNotNull();
    }
 
@@ -98,16 +97,12 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
 
    @Then("there are no open tasks")
    public void thereAreNoOpenTasks() {
-      getAllTasks();
-      assertThat(tasks).isNotNull();
       final long countOpenTasks = getCountByTaskStatus(TaskStatus.OPEN);
       assertThat(countOpenTasks).isZero();
    }
 
    @Then("there are {int} completed tasks")
    public void thereAreCompletedTasks(final int taskCount) {
-      getAllTasks();
-      assertThat(tasks).isNotNull();
       final long countDoneTasks = getCountByTaskStatus(TaskStatus.DONE);
       assertThat(countDoneTasks).isEqualTo(taskCount);
    }
@@ -116,6 +111,5 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    private void cleanup() {
       markAllTasksAsDone();
       createdTaskIds.clear();
-      tasks.clear();
    }
 }

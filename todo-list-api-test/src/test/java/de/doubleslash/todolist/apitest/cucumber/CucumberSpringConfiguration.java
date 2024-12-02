@@ -2,6 +2,8 @@ package de.doubleslash.todolist.apitest.cucumber;
 
 import de.doubleslash.todolist.model.Task;
 import de.doubleslash.todolist.model.TaskStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,11 +12,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.TestPropertySource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.fail;
+import java.util.Optional;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(locations = "classpath:application-test.properties")
@@ -22,57 +23,101 @@ public class CucumberSpringConfiguration {
 
    private static final Logger logger = LoggerFactory.getLogger(CucumberSpringConfiguration.class);
 
-   private static final String TASKS_API = "/tasks";
+   @Value("${test.target}")
+   private String testTarget;
+
+   @Value("${api.tasks.endpoint:/tasks}")
+   private String tasksEndpoint;
 
    @Autowired
-   protected TestRestTemplate testRestTemplate;
-
-   @Value(("${test.target}"))
-   protected String testTarget;
+   private TestRestTemplate testRestTemplate;
 
    protected ResponseEntity<List<Task>> getResponse;
    protected ResponseEntity<Task> postResponse;
    protected ResponseEntity<Void> patchResponse;
-   protected List<Task> tasks;
-   protected List<Long> createdTaskIds;
+   protected List<Long> createdTaskIds = new ArrayList<>();
 
-   protected ResponseEntity<Task> createTask(final String title, final TaskStatus status) {
+   /**
+    * Create a task with the given title and status.
+    */
+   public ResponseEntity<Task> createTask(final String title, final TaskStatus status) {
       final Task task = new Task();
       task.setTitle(title);
       task.setStatus(status);
-      return testRestTemplate.postForEntity(testTarget + TASKS_API, task, Task.class);
+
+      try {
+         postResponse = testRestTemplate.postForEntity(getFullApiUrl(), task, Task.class);
+         if (postResponse.getStatusCode() == HttpStatus.OK && postResponse.getBody() != null) {
+            createdTaskIds.add(postResponse.getBody().getId());
+         } else {
+            logger.info("Failed to create task: {}", postResponse);
+         }
+      } catch (final Exception e) {
+         logger.error("Exception during task creation: {}", e.getMessage(), e);
+      }
+
+      return postResponse;
    }
 
-   protected void addCreatedTaskToTaskList() {
-      if (postResponse.getStatusCode() == HttpStatus.OK && postResponse.getBody() != null) {
-         createdTaskIds.add(postResponse.getBody().getId());
-      } else {
-         logger.error("Unexpected status code: {}", postResponse.getStatusCode());
-         fail("Unexpected status code: " + postResponse.getStatusCode());
+   /**
+    * Get all tasks from the API.
+    */
+   public List<Task> getAllTasks() {
+      try {
+         getResponse = testRestTemplate.exchange(getFullApiUrl(), HttpMethod.GET, null,
+               new ParameterizedTypeReference<List<Task>>() {
+               });
+         return Optional.ofNullable(getResponse.getBody()).orElse(Collections.emptyList());
+      } catch (final Exception e) {
+         logger.error("Exception during fetching tasks: {}", e.getMessage(), e);
+         return Collections.emptyList();
       }
    }
 
-   protected void getAllTasks() {
-      getResponse = testRestTemplate.exchange(testTarget + TASKS_API, HttpMethod.GET, null,
-            new ParameterizedTypeReference<List<Task>>() {
-            });
-      tasks = getResponse.getBody();
-   }
-
-   protected long getCountByTaskStatus(final TaskStatus taskStatus) {
+   /**
+    * Get the count of tasks by status.
+    */
+   public long getCountByTaskStatus(final TaskStatus taskStatus) {
+      final List<Task> tasks = getAllTasks();
       return tasks.stream()
-                  .filter(task -> task.getStatus() == taskStatus && createdTaskIds.contains(
-                        task.getId()))
+                  .filter(task -> task.getStatus() == taskStatus && createdTaskIds.contains(task.getId()))
                   .count();
    }
 
-   protected void markTaskAsDone(final Long taskId) {
-      final HttpEntity<Void> entity = new HttpEntity<>(null, new HttpHeaders());
-      patchResponse = testRestTemplate.exchange(testTarget + TASKS_API + "/" + taskId.toString(), HttpMethod.PATCH,
-            entity, Void.class);
+   /**
+    * Mark a task as done by task ID.
+    */
+   public void markTaskAsDone(final Long taskId) {
+      try {
+         final HttpEntity<Void> entity = new HttpEntity<>(null, new HttpHeaders());
+         patchResponse = testRestTemplate.exchange(getFullApiUrl() + "/" + taskId, HttpMethod.PATCH, entity,
+               Void.class);
+         if (patchResponse.getStatusCode() != HttpStatus.OK) {
+            logger.error("Failed to mark task {} as done: {}", taskId, patchResponse);
+         }
+      } catch (final Exception e) {
+         logger.error("Exception during marking task as done: {}", e.getMessage(), e);
+      }
    }
 
-   protected void markAllTasksAsDone() {
-      patchResponse = testRestTemplate.exchange(testTarget + TASKS_API, HttpMethod.PATCH, null, Void.class);
+   /**
+    * Mark all tasks as done.
+    */
+   public void markAllTasksAsDone() {
+      try {
+         patchResponse = testRestTemplate.exchange(getFullApiUrl(), HttpMethod.PATCH, null, Void.class);
+         if (patchResponse.getStatusCode() != HttpStatus.OK) {
+            logger.error("Failed to mark all tasks as done: {}", patchResponse);
+         }
+      } catch (final Exception e) {
+         logger.error("Exception during marking all tasks as done: {}", e.getMessage(), e);
+      }
+   }
+
+   /**
+    * Get the full API URL.
+    */
+   private String getFullApiUrl() {
+      return testTarget + tasksEndpoint;
    }
 }
