@@ -29,8 +29,8 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    }
 
    @Given("{int} open tasks are present")
-   public void tasksAreOpen(final int arg0) {
-      for (int i = 0; i < arg0; i++) {
+   public void tasksAreOpen(final int taskCount) {
+      for (int i = 0; i < taskCount; i++) {
          final String title = "Task " + i;
          postResponse = createTask(title, TaskStatus.OPEN);
          addCreatedTaskToTaskList();
@@ -63,37 +63,37 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    }
 
    @Then("there are {int} open tasks")
-   public void thereAreAtLeastOpenTasks(final int arg0) {
+   public void thereAreAtLeastOpenTasks(final int taskCount) {
       final long openTasksCount = getCountByTaskStatus(TaskStatus.OPEN);
-      assertThat(openTasksCount).isEqualTo(arg0);
+      assertThat(openTasksCount).isEqualTo(taskCount);
    }
 
    @Then("the server should respond with {int} on {string} endpoint")
-   public void theServerShouldRespondWithOnPostEndpoint(final int arg0, final String arg1) {
-      switch (arg1) {
+   public void theServerShouldRespondWithOnPostEndpoint(final int responseCode, final String endpoint) {
+      switch (endpoint) {
       case "POST":
-         assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+         assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(responseCode));
          break;
       case "GET":
-         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(responseCode));
          break;
       case "PATCH":
-         assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+         assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(responseCode));
          break;
       default:
-         logger.error("Invalid endpoint: {}", arg1);
-         fail("Invalid endpoint: " + arg1);
+         logger.error("Invalid endpoint: {}", endpoint);
+         fail("Invalid endpoint: " + endpoint);
       }
    }
 
    @Then("the server should respond with {int} on GET endpoint")
-   public void theServerShouldRespondWith(final int arg0) {
-      assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+   public void theServerShouldRespondWith(final int responseCode) {
+      assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(responseCode));
    }
 
    @Then("the server should respond with {int} on PATCH endpoint")
-   public void theServerShouldRespondWithOnPATCHEndpoint(final int arg0) {
-      assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
+   public void theServerShouldRespondWithOnPATCHEndpoint(final int responseCode) {
+      assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(responseCode));
    }
 
    @Then("there are no open tasks")
@@ -105,11 +105,11 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
    }
 
    @Then("there are {int} completed tasks")
-   public void thereAreCompletedTasks(final int arg0) {
+   public void thereAreCompletedTasks(final int taskCount) {
       getAllTasks();
       assertThat(tasks).isNotNull();
       final long countDoneTasks = getCountByTaskStatus(TaskStatus.DONE);
-      assertThat(countDoneTasks).isEqualTo(arg0);
+      assertThat(countDoneTasks).isEqualTo(taskCount);
    }
 
    @After
