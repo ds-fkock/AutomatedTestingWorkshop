@@ -20,9 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 @CucumberContextConfiguration
-public class TaskStepDefinitions extends CucumberSpringConfiguration {
+public class TaskApiStepDefinitions extends CucumberSpringConfiguration {
 
-   private static final Logger logger = LoggerFactory.getLogger(TaskStepDefinitions.class);
+   private static final Logger logger = LoggerFactory.getLogger(TaskApiStepDefinitions.class);
 
    @Before
    public void setUp() {
