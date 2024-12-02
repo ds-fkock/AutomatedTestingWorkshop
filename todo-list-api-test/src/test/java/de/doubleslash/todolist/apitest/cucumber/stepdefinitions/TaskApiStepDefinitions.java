@@ -108,7 +108,7 @@ public class TaskApiStepDefinitions extends CucumberSpringConfiguration {
    }
 
    @After
-   private void cleanup() {
+   public void cleanup() {
       markAllTasksAsDone();
       createdTaskIds.clear();
    }
