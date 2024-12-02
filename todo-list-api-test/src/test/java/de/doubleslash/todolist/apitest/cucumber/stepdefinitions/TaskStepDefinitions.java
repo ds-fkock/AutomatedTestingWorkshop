@@ -81,6 +81,7 @@ public class TaskStepDefinitions extends CucumberSpringConfiguration {
          assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(arg0));
          break;
       default:
+         logger.error("Invalid endpoint: {}", arg1);
          fail("Invalid endpoint: " + arg1);
       }
    }
