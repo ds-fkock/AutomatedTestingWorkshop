@@ -56,7 +56,7 @@ public class TaskApiStepDefinitions extends CucumberSpringConfiguration {
    }
 
    @Then("there are {int} open tasks")
-   public void thereAreAtLeastOpenTasks(final int taskCount) {
+   public void thereAreOpenTasks(final int taskCount) {
       final long openTasksCount = taskApiService.getCountByTaskStatus(TaskStatus.OPEN);
       assertThat(openTasksCount).isEqualTo(taskCount);
    }
@@ -80,7 +80,7 @@ public class TaskApiStepDefinitions extends CucumberSpringConfiguration {
    }
 
    @Then("the server should respond with {int} on GET endpoint")
-   public void theServerShouldRespondWith(final int responseCode) {
+   public void theServerShouldRespondWithOnGETEndpoint(final int responseCode) {
       assertThat(taskApiService.getGetResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(responseCode));
    }
 
