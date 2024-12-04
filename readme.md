@@ -1,4 +1,4 @@
-# Repository for Automated Testing Workshop Tractus-X Days
+# Automated Testing with Cucumber
 
 This repository can be used as a starting point for implementing automated tests.
 
