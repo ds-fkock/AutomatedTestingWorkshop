@@ -1,6 +1,6 @@
 # Repository for Automated Testing Workshop Tractus-X Days
 
-This repository used as a starting point for implementing automated tests.
+This repository can be used as a starting point for implementing automated tests.
 
 ## Table of Contents
 
