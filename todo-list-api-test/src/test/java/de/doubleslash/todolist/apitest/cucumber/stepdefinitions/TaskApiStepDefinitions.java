@@ -47,7 +47,7 @@ public class TaskApiStepDefinitions extends CucumberSpringConfiguration {
       assertThat(tasks).isNotNull();
    }
 
-   @When("task should be marked complete")
+   @When("created tasks should be marked complete")
    public void taskShouldBeMarkedComplete() {
       for (final Long taskId : taskApiService.getCreatedTaskIds()) {
          taskApiService.markTaskAsDone(taskId);
